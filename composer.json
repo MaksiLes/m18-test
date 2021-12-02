@@ -1,0 +1,18 @@
+{
+    "name": "olesya/m18",
+    "autoload": {
+        "psr-4": {
+            "Src\\": "Src"
+        }
+    },
+    "authors": [
+        {
+            "name": "olesya",
+            "email": "ol.max97@mail.ru"
+        }
+    ],
+    "require": {
+      "ext-pdo": "*"
+    },
+    "require-dev": {}
+}
