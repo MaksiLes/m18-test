@@ -15,11 +15,7 @@ class Link
     {
         $this->url = trim($url);
     }
-
-    /**
-     * @param int $length
-     * @return string
-     */
+пш
     public function generateCode(int $length): string
     {
         return substr(str_shuffle(self::PERMITTED_CHARS), 0, $length);
