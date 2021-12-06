@@ -2,11 +2,21 @@
 
 require_once "vendor/autoload.php";
 
+$cfg = include 'config.php';
+
+use Src\Config;
 use Src\Connection;
 use Src\LinkCreator;
 
-$pdo = Connection::GetInstance();
+$config = new Config($cfg['host'], $cfg['port'], $cfg['db_name'], $cfg['user_name'], $cfg['pass']);
+$pdo = Connection::getInstance($config);
 $linkCreator = new LinkCreator($pdo);
+
+function startsWith ($string, $startString)
+{
+    $len = strlen($startString);
+    return (substr($string, 0, $len) === $startString);
+}
 
 if ($_SERVER['REQUEST_METHOD' != "GET"])
 {
@@ -16,16 +26,21 @@ if ($_SERVER['REQUEST_METHOD' != "GET"])
 $path = trim($_SERVER['REQUEST_URI']);
 $urlError = "";
 
-if ($path !== "/")
+if (startsWith($path, "/code/"))
 {
-    $code = str_replace("/", "", $path);
+    $code = str_replace("/code/", "", $path);
     $code = strtok($code, "?");
 
-    $stmt = $pdo->prepare('SELECT * FROM links WHERE code = ?');
+    $stmt = $pdo->prepare('SELECT * FROM links WHERE code = ? and created + interval 30 day >= now()');
     $stmt->execute([$code]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $row = $stmt->fetch();
     if ($row !== false)
     {
+        $stmt = $pdo->prepare(
+            'INSERT INTO clicks (link_id, clicks) VALUES (?,1) ON DUPLICATE KEY UPDATE clicks=clicks+1;'
+        );
+        $stmt->execute([$row['id']]);
+
         header("Location: {$row['url']}");
         exit();
     }

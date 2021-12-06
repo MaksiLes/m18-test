@@ -4,6 +4,8 @@ namespace Src;
 
 class Link
 {
+    private const PERMITTED_CHARS = '0123456789abcdefghijklmnopqrstuvwxyz';
+
     public int $id = 0;
     public string $code = '';
     public string $created;
@@ -14,44 +16,48 @@ class Link
         $this->url = trim($url);
     }
 
-    public function generateCode()
+    /**
+     * @param int $length
+     * @return string
+     */
+    public function generateCode(int $length): string
     {
-        return (string)$this->id;
+        return substr(str_shuffle(self::PERMITTED_CHARS), 0, $length);
     }
 
-    public function getUrl()
+    public function getUrl(): string
     {
         return $this->url;
     }
 
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }
 
-    public function setId($id)
+    public function setId($id): void
     {
         $this->id = $id;
     }
 
-    public function getCode()
+    public function getCode(): string
     {
         return $this->code;
     }
 
-    public function setCode(string $code)
+    public function setCode(string $code): void
     {
-        return $this->code = $code;
+        $this->code = $code;
     }
 
-    public function getCreated()
+    public function getCreated(): string
     {
         return $this->created;
     }
 
-    public function setCreated($created)
+    public function setCreated(string $created): void
     {
-        return $this->code = $created;
+        $this->code = $created;
     }
 }
 

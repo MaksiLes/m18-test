@@ -2,8 +2,6 @@
 
 namespace Src;
 
-use PDO;
-
 class LinkCreator
 {
     private \PDO $conn;
@@ -19,22 +17,27 @@ class LinkCreator
 
         $urlRequest = $this->conn->prepare('SELECT * FROM links WHERE url = ?');
         $urlRequest->execute([$link->getUrl()]);
-        $urlResult = $urlRequest->fetch(PDO::FETCH_ASSOC);
+        $urlResult = $urlRequest->fetch();
 
         if ($urlResult === false) {
-            $prepareRequest = $this->conn->prepare('INSERT INTO links(url) VALUES (?)');
-            $prepareRequest->execute([$link->getUrl()]);
+            $unique = false;
+            $createdRowStmt = $this->conn->prepare('SELECT * FROM links WHERE code = ?');
+            do {
+                $code = $link->generateCode(6);
 
-            $createdRowStmt = $this->conn->prepare('SELECT * FROM links WHERE id = ?');
-            $createdRowStmt->execute([$this->conn->lastInsertId()]);
-            $createdRow = $createdRowStmt->fetch(PDO::FETCH_ASSOC);
+                $createdRowStmt->execute([$code]);
+                if ($createdRowStmt->fetch()) {
+                    continue;
+                }
 
-            $link->setId($createdRow['id']);
-            $link->setCreated($createdRow['created']);
-            $link->setCode($link->generateCode());
+                $prepareRequest = $this->conn->prepare('INSERT INTO links(url, code) VALUES (?, ?)');
+                $prepareRequest->execute([$link->getUrl(), $code]);
 
-            $updateUrlCode = $this->conn->prepare('UPDATE links SET code = ? WHERE id = ?');
-            $updateUrlCode->execute([$link->getCode(), $link->getId()]);
+                $unique = true;
+            } while (!$unique);
+
+            $link->setCode($code);
+            $link->setId($this->conn->lastInsertId());
         } else {
             $link->setId($urlResult['id']);
             $link->setCreated($urlResult['created']);

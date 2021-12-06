@@ -6,20 +6,28 @@ use PDO;
 
 class Connection
 {
-    public const HOST = '127.0.0.1';
-    public const PORT = 3306;
-    public const DB_NAME = 'm18_test';
-    public const USER_NAME = 'root';
-    public const PASS = 'qwerty';
-
     private static PDO $pdo;
 
-    public static function GetInstance(): PDO
+    protected function __construct() { }
+
+    protected function __clone() { }
+
+    public function __wakeup()
+    {
+        throw new \Exception("Cannot unserialize a singleton.");
+    }
+
+    public static function getInstance(Config $cfg): PDO
     {
         if (!isset(static::$pdo)) {
-            $dsn = sprintf("mysql:host=%s;port=%d;dbname=%s", self::HOST, self::PORT, self::DB_NAME);
+            $dsn = sprintf("mysql:host=%s;port=%d;dbname=%s", $cfg->getHost(), $cfg->getPort(), $cfg->getDbName());
 
-            static::$pdo = new PDO($dsn, self::USER_NAME, self::PASS);
+            static::$pdo = new PDO(
+                $dsn,
+                $cfg->getUserName(),
+                $cfg->getPass(),
+                [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+            );
         }
 
         return static::$pdo;
